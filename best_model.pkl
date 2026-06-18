@@ -1,6 +1,0 @@
-git lfs install
-git lfs track "*.pkl"
-git add .gitattributes
-git add best_model.pkl vectorizer.pkl scaler.pkl
-git commit -m "Upload real weights via LFS"
-git push origin main
