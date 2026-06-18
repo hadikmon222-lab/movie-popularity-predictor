@@ -1,6 +1,5 @@
 import streamlit as st
 import joblib
-import pickle
 import pandas as pd
 import numpy as np
 
@@ -10,12 +9,10 @@ st.set_page_config(page_title="Movie Popularity Predictor", page_icon="🎬", la
 @st.cache_resource
 def load_models():
     try:
-        # Load your model, vectorizer, and scaler using the exact filenames
+        # Load ALL 3 files using joblib to match how they were saved in Colab
         model = joblib.load('best_model.pkl')
-        with open('vectorizer.pkl', 'rb') as f:
-            cv = pickle.load(f)
-        with open('scaler.pkl', 'rb') as f:
-            scaler = pickle.load(f)
+        cv = joblib.load('vectorizer.pkl')
+        scaler = joblib.load('scaler.pkl')
         return model, cv, scaler
     except Exception as e:
         st.error(f"Error loading model files: {e}")
@@ -44,9 +41,8 @@ movie_overview = st.text_area("Overview", value="A movie about hope and freedom.
 if st.button("🔮 Predict Popularity", type="primary"):
     if model is not None:
         try:
-            # 1. Scale numeric inputs using RobustScaler (expects shape matching training scaling)
-            # Your scaler was fit on: ['vote_average', 'vote_count', 'popularity']
-            # We provide a dummy 0 for popularity since it's dropped during X/y split anyway
+            # 1. Scale numeric inputs using RobustScaler
+            # Pass a dummy 0 for popularity since it's dropped during X/y split anyway
             scaled = scaler.transform([[vote_average, vote_count, 0]])
             vote_average_scaled = scaled[0][0]
             vote_count_scaled = scaled[0][1]
@@ -57,7 +53,7 @@ if st.button("🔮 Predict Popularity", type="primary"):
             # 3. Create numeric feature array (4 features: vote_average, vote_count, release_month, release_day)
             numeric_features = np.array([[vote_average_scaled, vote_count_scaled, release_month, release_day]])
             
-            # 4. Concatenate numeric and text features to match the exact shape expected by the model
+            # 4. Concatenate numeric and text features to match the model shape
             input_data = np.concatenate([numeric_features, overview_cv], axis=1)
 
             # 5. Predict popularity class
